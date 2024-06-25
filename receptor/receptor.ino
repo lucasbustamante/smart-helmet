@@ -5,7 +5,8 @@
 #include <BLEScan.h>
 #include <Adafruit_NeoPixel.h>
 
-#define LED_PIN 2
+#define LEFT_LED_PIN 2
+#define RIGHT_LED_PIN 4
 #define NUMPIXELS 1
 
 static BLEUUID serviceUUID("12345678-1234-5678-1234-56789abcdef0");
@@ -18,7 +19,8 @@ static BLERemoteCharacteristic* pRemoteCharacteristic;
 static BLEAdvertisedDevice* myDevice;
 static BLEScan* pBLEScan;
 
-Adafruit_NeoPixel pixels(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel leftPixels(NUMPIXELS, LEFT_LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel rightPixels(NUMPIXELS, RIGHT_LED_PIN, NEO_GRB + NEO_KHZ800);
 
 class AdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
   void onResult(BLEAdvertisedDevice advertisedDevice) {
@@ -48,8 +50,10 @@ class ClientCallbacks: public BLEClientCallbacks {
 
 void setup() {
   Serial.begin(115200);
-  pixels.begin(); // Initialize the NeoPixel library
-  pixels.show();  // Initialize all pixels to 'off'
+  leftPixels.begin(); // Initialize the NeoPixel library
+  leftPixels.show();  // Initialize all pixels to 'off'
+  rightPixels.begin(); // Initialize the NeoPixel library
+  rightPixels.show();  // Initialize all pixels to 'off'
   
   // Initialize BLE
   BLEDevice::init("Beacon2");
@@ -104,12 +108,24 @@ static void notifyCallback(
     Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
     Serial.print(" of data length ");
     Serial.println(length);
-    if (pData[0] == '1') {
-      pixels.setPixelColor(0, pixels.Color(255, 255, 0)); // Yellow color
+    char buttonState = (char)pData[0];
+    if (buttonState == '1') {
+      leftPixels.setPixelColor(0, leftPixels.Color(255, 100, 0)); // Yellow color
+      leftPixels.show();
+    } else if (buttonState == '2') {
+      rightPixels.setPixelColor(0, rightPixels.Color(255, 100, 0)); // Yellow color
+      rightPixels.show();
+    } else if (buttonState == '3') {
+      leftPixels.setPixelColor(0, leftPixels.Color(255, 0, 0)); // Red color
+      rightPixels.setPixelColor(0, rightPixels.Color(255, 0, 0)); // Red color
+      leftPixels.show();
+      rightPixels.show();
     } else {
-      pixels.setPixelColor(0, pixels.Color(0, 0, 0)); // LED off
+      leftPixels.setPixelColor(0, leftPixels.Color(0, 0, 0)); // LED off
+      rightPixels.setPixelColor(0, rightPixels.Color(0, 0, 0)); // LED off
+      leftPixels.show();
+      rightPixels.show();
     }
-    pixels.show(); // Update the LED
 }
 
 void loop() {
